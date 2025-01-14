@@ -1,4 +1,4 @@
-name: Linux Build with CMake User Presets
+name: Build with CMake User Presets
 
 on:
   push:
@@ -10,34 +10,39 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        build_type: [release]  # Lowercase values to match CMake presets
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        build_type: [release]  # Lowercase to match CMake presets
+    runs-on: ${{ matrix.os }}
 
-    steps:      
+    steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
-          sudo apt update
-          sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common
+          sudo apt update && sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common || true
           
-          # Remove any existing CMake version
-          sudo apt remove --purge --yes cmake
+          if [ "$(uname)" = "Linux" ]; then
+            # Remove existing CMake and install latest version (Linux)
+            sudo apt remove --purge --yes cmake || true
+            sudo mkdir -p /etc/apt/keyrings
+            curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
+            echo "deb [signed-by=/etc/apt/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+            sudo apt update && sudo apt install -y cmake
+          else
+            brew install cmake
+          fi
 
-          # Add Kitware APT repository for the latest CMake version
-          sudo mkdir -p /etc/apt/keyrings
-          curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
-          
-          # Update and install the latest CMake version
-          sudo apt update
-          sudo apt install -y cmake
-          
-          # Install Conan using pip
           pip3 install conan
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          pip install conan
 
       - name: Create Conan profile
         run: conan profile detect --force
@@ -55,4 +60,11 @@ jobs:
           cd out/build/conan-${{ matrix.build_type }}
           cmake ../../../ --preset conan-${{ matrix.build_type }}
           cmake --build .
-          ./hello_boost
+          ./hello_boost || hello_boost.exe || ./hello_boost.app/Contents/MacOS/hello_boost
+
+      - name: Upload hello_boost binary as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
+          path: |
+            out/build/conan-${{ matrix.build_type }}/hello_boost*

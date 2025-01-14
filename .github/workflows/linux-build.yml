@@ -68,7 +68,6 @@ jobs:
           cd out/build/conan-${{ matrix.build_type }}
           cmake ../../../ --preset conan-${{ matrix.build_type }}
           cmake --build .
-          ./hello_boost || ./hello_boost.app/Contents/MacOS/hello_boost
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
@@ -76,7 +75,6 @@ jobs:
           cd out\build\conan-${{ matrix.build_type }}
           cmake ..\..\..\ --preset conan-${{ matrix.build_type }}
           cmake --build .
-          hello_boost.exe
 
       - name: Upload hello_boost binary as artifact
         uses: actions/upload-artifact@v3

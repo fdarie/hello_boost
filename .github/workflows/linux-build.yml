@@ -24,7 +24,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           if [ "$(uname)" = "Linux" ]; then
-            sudo apt update && sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common || true
+            sudo apt update && sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common
             sudo apt remove --purge --yes cmake || true
             sudo mkdir -p /etc/apt/keyrings
             curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
@@ -33,7 +33,7 @@ jobs:
           else
             brew install cmake
           fi
-          pip3 install conan --break-system-packages
+          pip3 install conan --break-system-packages || pip3 install --user conan
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -44,7 +44,17 @@ jobs:
       - name: Create Conan profile
         run: conan profile detect --force
 
-      - name: Install Conan dependencies
+      - name: Install Conan dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          if [ "${{ matrix.build_type }}" == "debug" ]; then
+            conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
+          else
+            conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+          fi
+
+      - name: Install Conan dependencies (Windows)
+        if: runner.os == 'Windows'
         run: |
           if ($env:matrix_build_type -eq 'debug') {
             conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
@@ -52,17 +62,21 @@ jobs:
             conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
           }
 
-      - name: Build
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
-          if ($env:matrix_build_type -eq 'debug') {
-            cd out/build/conan-debug
-            cmake ../../../ --preset conan-debug
-          } else {
-            cd out/build/conan-release
-            cmake ../../../ --preset conan-release
-          }
+          cd out/build/conan-${{ matrix.build_type }}
+          cmake ../../../ --preset conan-${{ matrix.build_type }}
           cmake --build .
-          ./hello_boost || hello_boost.exe || ./hello_boost.app/Contents/MacOS/hello_boost
+          ./hello_boost || ./hello_boost.app/Contents/MacOS/hello_boost
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd out\build\conan-${{ matrix.build_type }}
+          cmake ..\..\..\ --preset conan-${{ matrix.build_type }}
+          cmake --build .
+          hello_boost.exe
 
       - name: Upload hello_boost binary as artifact
         uses: actions/upload-artifact@v3

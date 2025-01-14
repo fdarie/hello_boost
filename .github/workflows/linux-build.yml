@@ -33,8 +33,6 @@ jobs:
           else
             brew install cmake
           fi
-
-          # Use pip with --break-system-packages flag on macOS
           pip3 install conan --break-system-packages
 
       - name: Install dependencies (Windows)
@@ -48,16 +46,21 @@ jobs:
 
       - name: Install Conan dependencies
         run: |
-          if [ "${{ matrix.build_type }}" == "debug" ]; then
+          if ($env:matrix_build_type -eq 'debug') {
             conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
-          else
+          } else {
             conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
-          fi
+          }
 
       - name: Build
         run: |
-          cd out/build/conan-${{ matrix.build_type }}
-          cmake ../../../ --preset conan-${{ matrix.build_type }}
+          if ($env:matrix_build_type -eq 'debug') {
+            cd out/build/conan-debug
+            cmake ../../../ --preset conan-debug
+          } else {
+            cd out/build/conan-release
+            cmake ../../../ --preset conan-release
+          }
           cmake --build .
           ./hello_boost || hello_boost.exe || ./hello_boost.app/Contents/MacOS/hello_boost
 

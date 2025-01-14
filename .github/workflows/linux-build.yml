@@ -1,0 +1,58 @@
+name: Linux Build with CMake User Presets
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build_type: [release]  # Lowercase values to match CMake presets
+
+    steps:      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common
+          
+          # Remove any existing CMake version
+          sudo apt remove --purge --yes cmake
+
+          # Add Kitware APT repository for the latest CMake version
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+          
+          # Update and install the latest CMake version
+          sudo apt update
+          sudo apt install -y cmake
+          
+          # Install Conan using pip
+          pip3 install conan
+
+      - name: Create Conan profile
+        run: conan profile detect --force
+
+      - name: Install Conan dependencies
+        run: |
+          if [ "${{ matrix.build_type }}" == "debug" ]; then
+            conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
+          else
+            conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+          fi
+
+      - name: Build
+        run: |
+          cd out/build/conan-${{ matrix.build_type }}
+          cmake ../../../ --preset conan-${{ matrix.build_type }}
+          cmake --build .
+          ./hello_boost

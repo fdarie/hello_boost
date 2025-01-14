@@ -1,0 +1,32 @@
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake-build-debug/
+cmake-build-release/
+
+# Compiled binary files
+*.exe
+*.dll
+*.so
+*.dylib
+*.o
+*.obj
+
+# Visual Studio Code settings
+.vscode/
+.vs/
+launch.json
+settings.json
+c_cpp_properties.json
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store        # macOS Finder metadata
+Thumbs.db        # Windows Explorer metadata
+
+# Output
+out/
+build/
+conan

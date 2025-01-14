@@ -23,10 +23,8 @@ jobs:
       - name: Install dependencies (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
-          sudo apt update && sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common || true
-          
           if [ "$(uname)" = "Linux" ]; then
-            # Remove existing CMake and install latest version (Linux)
+            sudo apt update && sudo apt install -y build-essential python3-pip apt-transport-https ca-certificates gnupg software-properties-common || true
             sudo apt remove --purge --yes cmake || true
             sudo mkdir -p /etc/apt/keyrings
             curl -fsSL https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo gpg --dearmor -o /etc/apt/keyrings/kitware-archive-keyring.gpg
@@ -36,7 +34,8 @@ jobs:
             brew install cmake
           fi
 
-          pip3 install conan
+          # Use pip with --break-system-packages flag on macOS
+          pip3 install conan --break-system-packages
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'

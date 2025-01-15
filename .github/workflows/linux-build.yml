@@ -81,4 +81,4 @@ jobs:
         with:
           name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
           path: |
-            out/build/conan-${{ matrix.build_type }}/hello_boost*
+            ${{ runner.os == 'Windows' && 'out/build/conan-${{ matrix.build_type }}/$(matrix.build_type)/hello_boost.exe' || 'out/build/conan-${{ matrix.build_type }}/hello_boost*' }}

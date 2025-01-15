@@ -72,8 +72,13 @@ jobs:
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
-          cmake --preset conan-${{ matrix.build_type }}
+          conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+          cmake --preset conan-release
           cmake --build .
+          
+      - name: List build output
+        if: runner.os == 'Windows'
+        run: dir out\build\conan-release\*
   
       - name: Upload hello_boost binary (Linux/macOS)
         if: runner.os != 'Windows'

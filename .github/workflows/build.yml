@@ -53,14 +53,14 @@ jobs:
             conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
           fi
 
-      - name: Install Conan dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          if ($env:matrix_build_type -eq 'debug') {
-            conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
-          } else {
-            conan install . --build=missing -s build_type=Release
-          }
+      # - name: Install Conan dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     if ($env:matrix_build_type -eq 'debug') {
+      #       conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
+      #     } else {
+      #       conan install . --build=missing -s build_type=Release
+      #     }
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'

@@ -14,7 +14,9 @@ class ConanApplication(ConanFile):
 
     def generate(self):
         tc = CMakeToolchain(self)
+        build_type = str(self.settings.build_type).lower()
         tc.user_presets_path = False
+        tc.preset_name = f"conan-{build_type}"  # Use your custom preset name
         tc.generate()
         
     def requirements(self):

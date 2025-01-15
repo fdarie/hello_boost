@@ -41,17 +41,17 @@ jobs:
           choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
           pip install conan
 
-      # - name: Create Conan profile
-      #   run: conan profile detect --force
+      - name: Create Conan profile
+        run: conan profile detect --force
 
-      # - name: Install Conan dependencies (Linux/macOS)
-      #   if: runner.os != 'Windows'
-      #   run: |
-      #     if [ "${{ matrix.build_type }}" == "debug" ]; then
-      #       conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
-      #     else
-      #       conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
-      #     fi
+      - name: Install Conan dependencies (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          if [ "${{ matrix.build_type }}" == "debug" ]; then
+            conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
+          else
+            conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+          fi
 
       - name: Install Conan dependencies (Windows)
         if: runner.os == 'Windows'
@@ -59,15 +59,15 @@ jobs:
           if ($env:matrix_build_type -eq 'debug') {
             conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
           } else {
-            conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+            conan install . --build=missing -s build_type=Release
           }
 
-      # - name: Build (Linux/macOS)
-      #   if: runner.os != 'Windows'
-      #   run: |
-      #     cd out/build/conan-${{ matrix.build_type }}
-      #     cmake ../../../ --preset conan-${{ matrix.build_type }}
-      #     cmake --build .
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd out/build/conan-${{ matrix.build_type }}
+          cmake ../../../ --preset conan-${{ matrix.build_type }}
+          cmake --build .
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
@@ -75,12 +75,12 @@ jobs:
           cmake --preset conan-${{ matrix.build_type }}
           cmake --build .
   
-      # - name: Upload hello_boost binary (Linux/macOS)
-      #   if: runner.os != 'Windows'
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
-      #     path: out/build/conan-${{ matrix.build_type }}/hello_boost*
+      - name: Upload hello_boost binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v3
+        with:
+          name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
+          path: out/build/conan-${{ matrix.build_type }}/hello_boost*
 
       # - name: Upload hello_boost binary (Windows)
       #   if: runner.os == 'Windows'

@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest]
         build_type: [release]  # Lowercase to match CMake presets
     runs-on: ${{ matrix.os }}
 
@@ -53,14 +53,14 @@ jobs:
             conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
           fi
 
-      - name: Install Conan dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          if ($env:matrix_build_type -eq 'debug') {
-            conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
-          } else {
-            conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
-          }
+      # - name: Install Conan dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     if ($env:matrix_build_type -eq 'debug') {
+      #       conan install . --build=missing -s build_type=Debug --output-folder=out/build/conan-debug
+      #     } else {
+      #       conan install . --build=missing -s build_type=Release --output-folder=out/build/conan-release
+      #     }
 
       - name: Build (Linux/macOS)
         if: runner.os != 'Windows'
@@ -72,10 +72,8 @@ jobs:
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd out\build\conan-${{ matrix.build_type }}
-          cmake ..\..\..\ --preset conan-${{ matrix.build_type }}
+          cmake --preset conan-${{ matrix.build_type }}
           cmake --build .
-          Get-ChildItem  -Recurse
   
       - name: Upload hello_boost binary (Linux/macOS)
         if: runner.os != 'Windows'
@@ -84,10 +82,10 @@ jobs:
           name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
           path: out/build/conan-${{ matrix.build_type }}/hello_boost*
 
-      - name: Upload hello_boost binary (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v3
-        with:
-          name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
-          path: |
-            out\build\conan-${{ matrix.build_type }}\${{ matrix.build_type == 'debug' && 'Debug' || 'Release' }}\hello_boost.exe
+      # - name: Upload hello_boost binary (Windows)
+      #   if: runner.os == 'Windows'
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
+      #     path: |
+      #       out\build\conan-${{ matrix.build_type }}\${{ matrix.build_type == 'debug' && 'Debug' || 'Release' }}\hello_boost.exe

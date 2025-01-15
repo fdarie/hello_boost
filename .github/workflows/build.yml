@@ -75,6 +75,7 @@ jobs:
           cd out\build\conan-${{ matrix.build_type }}
           cmake ..\..\..\ --preset conan-${{ matrix.build_type }}
           cmake --build .
+          dir /s
   
       - name: Upload hello_boost binary (Linux/macOS)
         if: runner.os != 'Windows'

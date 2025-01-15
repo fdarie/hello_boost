@@ -75,10 +75,18 @@ jobs:
           cd out\build\conan-${{ matrix.build_type }}
           cmake ..\..\..\ --preset conan-${{ matrix.build_type }}
           cmake --build .
+  
+      - name: Upload hello_boost binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v3
+        with:
+          name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
+          path: out/build/conan-${{ matrix.build_type }}/hello_boost*
 
-      - name: Upload hello_boost binary as artifact
+      - name: Upload hello_boost binary (Windows)
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v3
         with:
           name: hello_boost-${{ matrix.os }}-${{ matrix.build_type }}
           path: |
-            ${{ runner.os == 'Windows' && 'out/build/conan-${{ matrix.build_type }}/$(matrix.build_type)/hello_boost.exe' || 'out/build/conan-${{ matrix.build_type }}/hello_boost*' }}
+            out\build\conan-${{ matrix.build_type }}\${{ matrix.build_type == 'debug' && 'Debug' || 'Release' }}\hello_boost.exe
